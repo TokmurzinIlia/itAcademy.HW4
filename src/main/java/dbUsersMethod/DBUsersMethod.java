@@ -2,7 +2,7 @@ package dbUsersMethod;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.text.DecimalFormat;
+
 
 public class DBUsersMethod {
 
@@ -10,7 +10,7 @@ public class DBUsersMethod {
     static final String USER = "postgres";
     static final String PASS = "ASD123asd";
 
-    private static Connection con = null;
+    public static Connection con = null;
     private static PreparedStatement stmt = null;
     private static ResultSet rs = null;
 
@@ -58,6 +58,14 @@ public class DBUsersMethod {
     }
 
     public static void closeConnection() {
+
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
 
         if (stmt != null) {
             try {
@@ -196,9 +204,6 @@ public class DBUsersMethod {
 
             balance +=  Math.abs(valueTransaction);
 
-//            System.out.println(balance);
-//            System.out.println(accountId);
-
             stmt = con.prepareStatement(queryUpdateAccountsBalance);
 
             stmt.setBigDecimal(1, BigDecimal.valueOf(balance));
@@ -275,9 +280,6 @@ public class DBUsersMethod {
 
             balance -=  Math.abs(valueTransaction);
 
-            System.out.println(balance);
-//            System.out.println(accountId);
-
             stmt = con.prepareStatement(queryUpdateAccountsBalance);
 
             stmt.setBigDecimal(1, BigDecimal.valueOf(balance));
@@ -305,15 +307,15 @@ public class DBUsersMethod {
             }
             e.printStackTrace();
         } finally {
-//            System.out.println(balance);
-//            System.out.println(accountId);
+
             try {
                 con.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
 
-            closeConnection();}
+            closeConnection();
+        }
         }
 
 }
