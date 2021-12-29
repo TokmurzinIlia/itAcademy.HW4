@@ -1,23 +1,22 @@
 package dbUsersMethod;
 
+import dbMetod.DBCreator;
+
 import java.math.BigDecimal;
 import java.sql.*;
 
 
 public class DBUsersMethod {
 
-    static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/users";
-    static final String USER = "postgres";
-    static final String PASS = "ASD123asd";
 
-    public static Connection con = null;
+    private static Connection con = null;
     private static PreparedStatement stmt = null;
     private static ResultSet rs = null;
 
     public static String tableUsers = "CREATE TABLE Users"
             + "("
             + "userId INTEGER NOT NULL UNIQUE,"
-            + "name VARCHAR(50) NOT NULL,"
+            + "name VARCHAR(50) NOT NULL UNIQUE,"
             + "address VARCHAR(255) NULL,"
             + "PRIMARY KEY(userId)"
             + ")";
@@ -48,7 +47,7 @@ public class DBUsersMethod {
         try {
             Class.forName("org.postgresql.Driver");
 
-            con = DriverManager.getConnection(DB_URL, USER, PASS);
+            con = DriverManager.getConnection(DBCreator.PG_URL + "users", DBCreator.USER, DBCreator.PASS);
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -126,7 +125,7 @@ public class DBUsersMethod {
 
     }
 
-    public static void addAccountUser(int userID, int accountId, double balance, String currency) {
+    public static void addAccountUser(int userID, double balance, String currency) {
 
         String query = "INSERT INTO ACCOUNTS (userID, accountId, balance, currency) VALUES (?, ?, ?, ?)";
         try {
@@ -134,7 +133,7 @@ public class DBUsersMethod {
             stmt = connectToDBUsers().prepareStatement(query);
 
             stmt.setInt(1, userID);
-            stmt.setInt(2, accountId);
+            stmt.setInt(2, (int)(Math.random()*1000000));
             stmt.setBigDecimal(3, BigDecimal.valueOf(balance));
             stmt.setString(4, currency);
 
@@ -147,7 +146,7 @@ public class DBUsersMethod {
         }
     }
 
-    public static void addAccountUserExcludeCurrency(int userID, int accountId, double balance) {
+    public static void addAccountUserExcludeCurrency(int userID, double balance) {
 
         String query = "INSERT INTO ACCOUNTS (userID, accountId, balance) VALUES (?, ?, ?)";
         try {
@@ -155,7 +154,7 @@ public class DBUsersMethod {
             stmt = connectToDBUsers().prepareStatement(query);
 
             stmt.setInt(1, userID);
-            stmt.setInt(2, accountId);
+            stmt.setInt(2, (int)(Math.random()*1000000));
             stmt.setBigDecimal(3, BigDecimal.valueOf(balance));
 
 
@@ -173,6 +172,9 @@ public class DBUsersMethod {
         String querySelect = "SELECT * FROM accounts " +
                 "WHERE accounts.userid=? AND accounts.currency~*?";
 
+        String querySelectBalance = "SELECT * FROM accounts " +
+                "WHERE accounts.userid=? AND accounts.currency~*?";
+
         String queryUpdateAccountsBalance = "UPDATE accounts " +
                 "SET balance=? " +
                 "WHERE accounts.userid=? AND accounts.currency~*?";
@@ -186,11 +188,8 @@ public class DBUsersMethod {
 
             stmt = connectToDBUsers().prepareStatement(querySelect);
 
-            try {
-                con.setAutoCommit(false);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+
+            con.setAutoCommit(false);
 
             stmt.setInt(1, userID);
             stmt.setString(2, currency);
@@ -222,18 +221,36 @@ public class DBUsersMethod {
 
             con.commit();
 
+            System.out.println("Transaction completed");
+
 
         } catch (SQLException e) {
             try {
                 con.rollback();
+                System.out.println("Transaction declined");
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            e.printStackTrace();
+            //e.printStackTrace();
         } finally {
-//            System.out.println(balance);
-//            System.out.println(accountId);
             try {
+
+                stmt = connectToDBUsers().prepareStatement(querySelectBalance);
+
+                stmt.setInt(1, userID);
+                stmt.setString(2, currency);
+
+                rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    accountId = rs.getInt(1);
+                    balance = Double.parseDouble(String.valueOf(rs.getBigDecimal(3)));
+                }
+
+                System.out.println("Account Id: " + accountId);
+                System.out.println("Actual balance: " + balance + " " + currency);
+
+
                 con.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -247,6 +264,9 @@ public class DBUsersMethod {
     public static void withdrawalOfFundsBalance (int userID, String currency, double valueTransaction){
 
         String querySelect = "SELECT * FROM accounts " +
+                "WHERE accounts.userid=? AND accounts.currency~*?";
+
+        String querySelectBalance = "SELECT * FROM accounts " +
                 "WHERE accounts.userid=? AND accounts.currency~*?";
 
         String queryUpdateAccountsBalance = "UPDATE accounts " +
@@ -298,24 +318,42 @@ public class DBUsersMethod {
 
             con.commit();
 
+            System.out.println("Transaction completed");
 
         } catch (SQLException e) {
             try {
                 con.rollback();
+                System.out.println("Transaction declined");
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            e.printStackTrace();
+            //e.printStackTrace();
         } finally {
 
             try {
+
+                stmt = connectToDBUsers().prepareStatement(querySelectBalance);
+
+                stmt.setInt(1, userID);
+                stmt.setString(2, currency);
+
+                rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    accountId = rs.getInt(1);
+                    balance = Double.parseDouble(String.valueOf(rs.getBigDecimal(3)));
+                }
+
+                System.out.println("Account Id: " + accountId);
+                System.out.println("Actual balance: " + balance + " " + currency);
+
+
                 con.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-
             closeConnection();
-        }
+                }
         }
 
 }

@@ -3,9 +3,10 @@ package dbMetod;
 import java.sql.*;
 
 public class DBCreator {
-    static final String PG_URL = "jdbc:postgresql://127.0.0.1:5432/";
-    static final String USER = "postgres";
-    static final String PASS = "ASD123asd";
+
+    public static final String PG_URL = "jdbc:postgresql://127.0.0.1:5432/";
+    public static final String USER = "postgres";
+    public static final String PASS = "ASD123asd";
 
     private static Connection con = null;
     private static PreparedStatement stmt = null;
@@ -93,5 +94,48 @@ public class DBCreator {
         }
 
     }
+    public static Connection connectToDB(String dbName) {
 
+
+        try {
+            Class.forName("org.postgresql.Driver");
+
+            String url = DBCreator.PG_URL + dbName.toLowerCase();
+
+            con = DriverManager.getConnection(url, DBCreator.USER, DBCreator.PASS);
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+        return con;
+    }
+
+    public static void createInquiry(String dbName, String query) {
+        try {
+            stmt = connectToDB(dbName).prepareStatement(query);
+
+            stmt.executeUpdate();
+
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+    }
+
+    public static void dropTable(String dbName, String tableName) {
+        String query = "DROP TABLE " + tableName;
+        try {
+            stmt = connectToDB(dbName).prepareStatement(query);
+
+            stmt.executeUpdate();
+
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+    }
 }
+
