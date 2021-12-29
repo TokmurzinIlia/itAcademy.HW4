@@ -234,23 +234,6 @@ public class DBUsersMethod {
             //e.printStackTrace();
         } finally {
             try {
-
-                stmt = connectToDBUsers().prepareStatement(querySelectBalance);
-
-                stmt.setInt(1, userID);
-                stmt.setString(2, currency);
-
-                rs = stmt.executeQuery();
-
-                while (rs.next()) {
-                    accountId = rs.getInt(1);
-                    balance = Double.parseDouble(String.valueOf(rs.getBigDecimal(3)));
-                }
-
-                System.out.println("Account Id: " + accountId);
-                System.out.println("Actual balance: " + balance + " " + currency);
-
-
                 con.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -258,10 +241,32 @@ public class DBUsersMethod {
             closeConnection();
         }
 
+
+        try {
+
+            stmt = connectToDBUsers().prepareStatement(querySelectBalance);
+
+            stmt.setInt(1, userID);
+            stmt.setString(2, currency);
+
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                accountId = rs.getInt(1);
+                balance = Double.parseDouble(String.valueOf(rs.getBigDecimal(3)));
+            }
+
+            System.out.println("Account Id: " + accountId);
+            System.out.println("Actual balance: " + balance + " " + currency);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            closeConnection();
+        }
     }
 
 
-    public static void withdrawalOfFundsBalance (int userID, String currency, double valueTransaction){
+        public static void withdrawalOfFundsBalance (int userID, String currency, double valueTransaction){
 
         String querySelect = "SELECT * FROM accounts " +
                 "WHERE accounts.userid=? AND accounts.currency~*?";
@@ -330,7 +335,10 @@ public class DBUsersMethod {
             //e.printStackTrace();
         } finally {
 
-            try {
+            closeConnection();
+                }
+
+        try {
 
                 stmt = connectToDBUsers().prepareStatement(querySelectBalance);
 
@@ -346,14 +354,11 @@ public class DBUsersMethod {
 
                 System.out.println("Account Id: " + accountId);
                 System.out.println("Actual balance: " + balance + " " + currency);
-
-
-                con.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
+        } catch (SQLException throwables) {
+                throwables.printStackTrace();
+        } finally {
+                closeConnection();
             }
-            closeConnection();
-                }
         }
 
 }
